@@ -310,12 +310,18 @@ load_cdf(char *cdf_file)
         return -1;
     }
     int n;
-    fscanf(fp, "%d", &n);
+    if (fscanf(fp, "%d", &n) != 1) {
+        fclose(fp);
+        return -1;
+    }
     cdf_list_size = n;
     cdf_list = malloc(sizeof(cdf_entry_t) * cdf_list_size);
     while (n--) {
-        fscanf(fp, "%lf%d", &cdf_list[cdf_list_size - n - 1].p, &cdf_list[cdf_list_size - n - 1].val);
+        if (fscanf(fp, "%lf%d", &cdf_list[cdf_list_size - n - 1].p, &cdf_list[cdf_list_size - n - 1].val) != 2) {
+            break;
+        }
     }
+    fclose(fp);
     return 0;
 }
 
@@ -1378,7 +1384,7 @@ xqc_client_bind_to_interface(int fd, const char *interface_name)
 #if !defined(XQC_SYS_WINDOWS)
     struct ifreq ifr;
     memset(&ifr, 0x00, sizeof(ifr));
-    strncpy(ifr.ifr_name, interface_name, sizeof(ifr.ifr_name) - 1);
+    snprintf(ifr.ifr_name, sizeof(ifr.ifr_name), "%s", interface_name);
 #if !defined(__APPLE__)
     printf("fd: %d. bind to nic: %s\n", fd, interface_name);
     if (setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, (char *)&ifr, sizeof(ifr)) < 0) {
@@ -4462,7 +4468,8 @@ int main(int argc, char *argv[]) {
                 break;
 
             case 8:
-                strncpy(conn_options, optarg, XQC_CO_STR_MAX_LEN);
+                strncpy(conn_options, optarg, XQC_CO_STR_MAX_LEN - 1);
+                conn_options[XQC_CO_STR_MAX_LEN - 1] = '\0';
                 printf("option conn_options: %s\n", conn_options);
                 break;
 

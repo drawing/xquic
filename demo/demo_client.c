@@ -2139,7 +2139,8 @@ xqc_demo_cli_parse_args(int argc, char *argv[], xqc_demo_cli_client_args_t *args
 
         case 's':
             printf("option scheduler: %s\n", optarg);
-            strncpy(args->quic_cfg.mp_sched, optarg, 32);
+            strncpy(args->quic_cfg.mp_sched, optarg, 31);
+            args->quic_cfg.mp_sched[31] = '\0';
             break;
 
         case 'b':
@@ -2228,7 +2229,8 @@ xqc_demo_cli_parse_args(int argc, char *argv[], xqc_demo_cli_client_args_t *args
         
         case 'G':
             printf("Google connection options: %s\n", optarg);
-            strncpy(args->quic_cfg.co_str, optarg, XQC_CO_STR_MAX_LEN);
+            strncpy(args->quic_cfg.co_str, optarg, XQC_CO_STR_MAX_LEN - 1);
+            args->quic_cfg.co_str[XQC_CO_STR_MAX_LEN - 1] = '\0';
             break;
 
         case 'r':
@@ -2822,7 +2824,7 @@ xqc_demo_cli_start(xqc_demo_cli_user_conn_t *user_conn, xqc_demo_cli_client_args
 void
 xqc_demo_cli_init_ctx(xqc_demo_cli_ctx_t *pctx, xqc_demo_cli_client_args_t *args)
 {
-    strncpy(pctx->log_path, args->env_cfg.log_path, sizeof(pctx->log_path) - 1);
+    snprintf(pctx->log_path, sizeof(pctx->log_path), "%s", args->env_cfg.log_path);
     pctx->args = args;
     xqc_demo_cli_open_log_file(pctx);
     xqc_demo_cli_open_keylog_file(pctx);
@@ -2912,7 +2914,7 @@ xqc_demo_cli_create_socket(xqc_demo_cli_user_path_t *user_path,
 #if !defined(XQC_SYS_WINDOWS)
         struct ifreq ifr;
         memset(&ifr, 0x00, sizeof(ifr));
-        strncpy(ifr.ifr_name, cfg->iflist[path_seq], sizeof(ifr.ifr_name) - 1);
+        snprintf(ifr.ifr_name, sizeof(ifr.ifr_name), "%s", cfg->iflist[path_seq]);
 
 #if !defined(__APPLE__)
         printf("fd: %d. bind to nic: %s\n", fd, cfg->iflist[path_seq]);
